@@ -24,6 +24,7 @@ def handleExit():
 class EDGES(Enum):
     grass=auto()
     river=auto()
+    road=auto()
 
 class Tile:
     def __init__(self,imgpath,right=EDGES.grass,left=EDGES.grass,top=EDGES.grass,bottom=EDGES.grass) -> None:
@@ -81,12 +82,15 @@ try:
     tileShadowImg=pygame.image.load("assets/shadow.png").convert_alpha()
 
     grass = Tile("grass.png")
-    riversStraight = [Tile("riverLR.png",EDGES.river,EDGES.river),Tile("riverLR1.png",EDGES.river,EDGES.river),Tile("riverLR2.png",EDGES.river,EDGES.river),Tile("riverLR3.png",EDGES.river,EDGES.river)]
-    riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river)]
-    riversEnd = Tile("riverL.png",left=EDGES.river)
+    riversStraight = [Tile("riverLR.png",EDGES.river,EDGES.river),Tile("riverLR1.png",EDGES.river,EDGES.river)]#,Tile("riverLR2.png",EDGES.river,EDGES.river),Tile("riverLR3.png",EDGES.river,EDGES.river)]
+    riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river),Tile("riverLBRoadTR.png",left=EDGES.river,bottom=EDGES.river,top=EDGES.road,right=EDGES.road)]
+    riversEnd = [Tile("riverL.png",left=EDGES.river)]
+
+    roadsStraight = [Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
+    roadsCrossings = [Tile("roadTRLB.png",EDGES.road,EDGES.road,EDGES.road,EDGES.road)]
 
     riverTiles=[riversStraight,riversTurn,riversEnd]
-    defaultTiles=[]
+    defaultTiles=[roadsStraight,roadsCrossings]
 except FileNotFoundError:
     txtsurf=renderText("Roboto",30,"Failed loading textures.","#ffffff")
     window=pygame.display.set_mode((txtsurf.get_width(),txtsurf.get_height()))
@@ -100,7 +104,7 @@ except FileNotFoundError:
 
 cursor:Tile=selectTiles(river=True)
 cursorRotation=0
-
+placedRiverEnds=0
 
 
 lastKeysPressed=[]
@@ -111,6 +115,8 @@ clock = pygame.time.Clock()
 
 
 world = {"0,0":[selectTile(riversStraight),random.randint(0,100),0]}
+
+
 
 
 
@@ -185,7 +191,12 @@ while True:
 
             if allow:
                 world[f"{cx},{cy}"]=[cursor,random.randint(0,100),cursorRotation]
-                cursor=selectTiles(river=True)
+                if cursor in riversEnd:
+                    placedRiverEnds+=1
+                if placedRiverEnds>=2:
+                    cursor=selectTiles()
+                else:
+                    cursor=selectTiles(river=True)
     
 
     cursor.render(cx,cy,cursorRotation,0,True)
