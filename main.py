@@ -55,10 +55,11 @@ class Tile:
             window.blit(img,pos)
             window.blit(pygame.transform.scale(tileShadowImg,(80,80)),pos)
             return
-        random.seed(offsetSeed)
+        #random.seed(offsetSeed)
         
-        pos=((x*70)+((window.get_width()-64)/2)+random.randint(-2,2),((y*70)+((window.get_height()-64)/2))+random.randint(-2,2))
+        pos=((x*70)+((window.get_width()-64)/2)+random.randint(-0,0),((y*70)+((window.get_height()-64)/2))+random.randint(-0,0))
         window.blit(pygame.transform.rotate(self.img,-rotation*90),pos)
+        print(-rotation*90)
         window.blit(tileShadowImg,pos)
 
 
@@ -99,15 +100,19 @@ def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,roa
             if world[(x,y)].tile.getTop(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x,y-1)):
                     road.append(calculateRoadConnections((x,y-1)))
+
             if world[(x,y)].tile.getBottom(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x,y+1)):
                     road.append(calculateRoadConnections((x,y+1)))
+
             if world[(x,y)].tile.getLeft(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x-1,y)):
                     road.append(calculateRoadConnections((x-1,y)))
+
             if world[(x,y)].tile.getRight(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x+1,y)):
                     road.append(calculateRoadConnections((x+1,y)))
+
             return road
 
     road.append(pos)
@@ -120,14 +125,17 @@ def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,roa
         if world[(x,y)].tile.getTop(world[(x,y)].rotation)==EDGES.road:
             if world.get((x,y-1)):
                 road=calculateRoadConnections((x,y-1),pos,road)
+                
     if not fromTile[1]>pos[1]:
         if world[(x,y)].tile.getBottom(world[(x,y)].rotation)==EDGES.road:
             if world.get((x,y+1)):
                 road=calculateRoadConnections((x,y+1),pos,road)
+
     if not fromTile[0]<pos[0]:
         if world[(x,y)].tile.getLeft(world[(x,y)].rotation)==EDGES.road:
             if world.get((x-1,y)):
                 road=calculateRoadConnections((x-1,y),pos,road)
+
     if not fromTile[0]>pos[0]:
         if world[(x,y)].tile.getRight(world[(x,y)].rotation)==EDGES.road:
             if world.get((x+1,y)):
@@ -222,7 +230,7 @@ world = World()
 
 
 while True:
-    dt = clock.tick(5)
+    dt = clock.tick(60)
 
 
     EVENTS = pygame.event.get()
@@ -248,12 +256,16 @@ while True:
 
     
     for pos, info in world.items():
-        info.tile.render(int(pos[0]),int(pos[1]),info.offsetSeed,info.rotation)
+        print(info.rotation)
+        info.tile.render(int(pos[0]),int(pos[1]),info.rotation,info.offsetSeed)
 
     cx=int((pygame.mouse.get_pos()[0]+35-window.get_width()/2)//70)
     cy=int((pygame.mouse.get_pos()[1]+35-window.get_height()/2)//70)
+
+
+
     if pygame.mouse.get_pressed()[0]:
-        if not f"{cx},{cy}" in world:
+        if not (cx,cy) in world:
             infoLeft=world.get((cx-1,cy))
             infoRight=world.get((cx+1,cy))
             infoTop=world.get((cx,cy-1))
@@ -274,6 +286,8 @@ while True:
                     if blockTop.getBottom(infoTop.rotation)!=cursor.getTop(cursorRotation):allow=False
                 if infoRight:
                     if blockRight.getLeft(infoRight.rotation)!=cursor.getRight(cursorRotation):allow=False
+                    print(cursor.getRight(cursorRotation))
+                    print(blockRight.getLeft(infoRight.rotation))
                 if infoBottom:
                     if blockBottom.getTop(infoBottom.rotation)!=cursor.getBottom(cursorRotation):allow=False
 
