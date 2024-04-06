@@ -49,9 +49,11 @@ class Tile:
 
     def render(self,x,y,rotation,offsetSeed,holding=False):
         if holding:
-            img=pygame.transform.rotate(pygame.transform.scale(self.img,(96,96)),-rotation*90)
+            img=pygame.transform.rotate(pygame.transform.scale(self.img,(80,80)),-rotation*90)
             img.set_alpha(180)
-            window.blit(img,((x*70)+((window.get_width()-96)/2),((y*70)+((window.get_height()-96)/2))))
+            pos=((x*70)+((window.get_width()-80)/2),((y*70)+((window.get_height()-80)/2)))
+            window.blit(img,pos)
+            window.blit(pygame.transform.scale(tileShadowImg,(80,80)),pos)
             return
         random.seed(offsetSeed)
         
@@ -78,19 +80,77 @@ def selectTiles(river=False):
             array.append(i)
     return random.choice(array)
 
+
+def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,road:list[tuple[int,int]]=None):
+    x,y=pos
+    if fromTile==None:fromTile=pos
+    if road==None:road=[]
+
+
+    roadConnections=0
+    for i in world[f"{x},{y}"][0].rotations:
+        if i==EDGES.road:
+            roadConnections+=1
+
+
+
+    if road==[]:
+        if roadConnections>2:
+            if world[f"{x},{y}"][0].getTop(world[f"{x},{y}"][2])==EDGES.road:
+                if world.get(f"{x},{y-1}"):
+                    road.append(calculateRoadConnections((x,y-1)))
+            if world[f"{x},{y}"][0].getBottom(world[f"{x},{y}"][2])==EDGES.road:
+                if world.get(f"{x},{y+1}"):
+                    road.append(calculateRoadConnections((x,y+1)))
+            if world[f"{x},{y}"][0].getLeft(world[f"{x},{y}"][2])==EDGES.road:
+                if world.get(f"{x-1},{y}"):
+                    road.append(calculateRoadConnections((x-1,y)))
+            if world[f"{x},{y}"][0].getRight(world[f"{x},{y}"][2])==EDGES.road:
+                if world.get(f"{x+1},{y}"):
+                    road.append(calculateRoadConnections((x+1,y)))
+            return road
+
+    road.append(pos)
+
+    
+    if roadConnections!=2:
+        if len(road)>1:return road
+    
+    if not fromTile[1]<pos[1]:
+        if world[f"{x},{y}"][0].getTop(world[f"{x},{y}"][2])==EDGES.road:
+            if world.get(f"{x},{y-1}"):
+                road=calculateRoadConnections((x,y-1),pos,road)
+    if not fromTile[1]>pos[1]:
+        if world[f"{x},{y}"][0].getBottom(world[f"{x},{y}"][2])==EDGES.road:
+            if world.get(f"{x},{y+1}"):
+                road=calculateRoadConnections((x,y+1),pos,road)
+    if not fromTile[0]<pos[0]:
+        if world[f"{x},{y}"][0].getLeft(world[f"{x},{y}"][2])==EDGES.road:
+            if world.get(f"{x-1},{y}"):
+                road=calculateRoadConnections((x-1,y),pos,road)
+    if not fromTile[0]>pos[0]:
+        if world[f"{x},{y}"][0].getRight(world[f"{x},{y}"][2])==EDGES.road:
+            if world.get(f"{x+1},{y}"):
+                road=calculateRoadConnections((x+1,y),pos,road)
+    
+    return road
+
+
 try:
     tileShadowImg=pygame.image.load("assets/shadow.png").convert_alpha()
 
     grass = Tile("grass.png")
-    riversStraight = [Tile("riverLR.png",EDGES.river,EDGES.river),Tile("riverLR1.png",EDGES.river,EDGES.river),Tile("riverLR2.png",EDGES.river,EDGES.river),Tile("riverLR3.png",EDGES.river,EDGES.river),Tile("riverLRoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road),Tile("riverLR2RoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road),Tile("riverLR3oadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road)]
+    riversStraight = [Tile("riverLR.png",EDGES.river,EDGES.river),Tile("riverLR1.png",EDGES.river,EDGES.river),Tile("riverLR2.png",EDGES.river,EDGES.river),Tile("riverLR3.png",EDGES.river,EDGES.river),Tile("riverLRRoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road),Tile("riverLR2RoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road),Tile("riverLR3RoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road)]
     riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river),Tile("riverLBRoadTR.png",left=EDGES.river,bottom=EDGES.river,top=EDGES.road,right=EDGES.road)]
-    riversEnd = [Tile("riverL.png",left=EDGES.river)]
+    riversEnd = [Tile("riverL.png",left=EDGES.river)]*5
 
     roadsStraight = [Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
     roadsCrossings = [Tile("roadTRLB.png",EDGES.road,EDGES.road,EDGES.road,EDGES.road)]
+    roadsTurn = [Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
+    roadsEnd = [Tile("roadL.png",left=EDGES.road),Tile("roadL1.png",left=EDGES.road)]
 
     riverTiles=[riversStraight,riversTurn,riversEnd]
-    defaultTiles=[roadsStraight,roadsCrossings]
+    defaultTiles=[roadsStraight,roadsCrossings,roadsEnd,roadsTurn]
 except FileNotFoundError:
     txtsurf=renderText("Roboto",30,"Failed loading textures.","#ffffff")
     window=pygame.display.set_mode((txtsurf.get_width(),txtsurf.get_height()))
@@ -107,6 +167,12 @@ cursorRotation=0
 placedRiverEnds=0
 
 
+players=3
+playerColors=["red","green","blue","black","yellow"]
+currentTurn=0
+
+
+
 lastKeysPressed=[]
 
 
@@ -121,7 +187,7 @@ world = {"0,0":[selectTile(riversStraight),random.randint(0,100),0]}
 
 
 while True:
-    dt = clock.tick(60)
+    dt = clock.tick(5)
 
 
     EVENTS = pygame.event.get()
@@ -191,15 +257,22 @@ while True:
 
             if allow:
                 world[f"{cx},{cy}"]=[cursor,random.randint(0,100),cursorRotation]
+                print(calculateRoadConnections((cx,cy),road=[]))
                 if cursor in riversEnd:
                     placedRiverEnds+=1
                 if placedRiverEnds>=2:
                     cursor=selectTiles()
                 else:
                     cursor=selectTiles(river=True)
+                currentTurn+=1
     
 
     cursor.render(cx,cy,cursorRotation,0,True)
+
+
+
+    pygame.draw.rect(window,playerColors[currentTurn%players],(0,window.get_height()-100,window.get_width(),100))
+
 
     window.blit(renderText("Roboto",30,f"FPS: {round(clock.get_fps())}", "#ff0000"),(5,5))
     pygame.display.flip()
