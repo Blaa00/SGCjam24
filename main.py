@@ -88,7 +88,7 @@ def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,roa
 
 
     roadConnections=0
-    for i in world[f"{x},{y}"][0].rotations:
+    for i in world[(x,y)].tile.rotations:
         if i==EDGES.road:
             roadConnections+=1
 
@@ -96,17 +96,17 @@ def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,roa
 
     if road==[]:
         if roadConnections>2:
-            if world[f"{x},{y}"][0].getTop(world[f"{x},{y}"][2])==EDGES.road:
-                if world.get(f"{x},{y-1}"):
+            if world[(x,y)].tile.getTop(world[(x,y)].rotation)==EDGES.road:
+                if world.get((x,y-1)):
                     road.append(calculateRoadConnections((x,y-1)))
-            if world[f"{x},{y}"][0].getBottom(world[f"{x},{y}"][2])==EDGES.road:
-                if world.get(f"{x},{y+1}"):
+            if world[(x,y)].tile.getBottom(world[(x,y)].rotation)==EDGES.road:
+                if world.get((x,y+1)):
                     road.append(calculateRoadConnections((x,y+1)))
-            if world[f"{x},{y}"][0].getLeft(world[f"{x},{y}"][2])==EDGES.road:
-                if world.get(f"{x-1},{y}"):
+            if world[(x,y)].tile.getLeft(world[(x,y)].rotation)==EDGES.road:
+                if world.get((x-1,y)):
                     road.append(calculateRoadConnections((x-1,y)))
-            if world[f"{x},{y}"][0].getRight(world[f"{x},{y}"][2])==EDGES.road:
-                if world.get(f"{x+1},{y}"):
+            if world[(x,y)].tile.getRight(world[(x,y)].rotation)==EDGES.road:
+                if world.get((x+1,y)):
                     road.append(calculateRoadConnections((x+1,y)))
             return road
 
@@ -117,20 +117,20 @@ def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,roa
         if len(road)>1:return road
     
     if not fromTile[1]<pos[1]:
-        if world[f"{x},{y}"][0].getTop(world[f"{x},{y}"][2])==EDGES.road:
-            if world.get(f"{x},{y-1}"):
+        if world[(x,y)].tile.getTop(world[(x,y)].rotation)==EDGES.road:
+            if world.get((x,y-1)):
                 road=calculateRoadConnections((x,y-1),pos,road)
     if not fromTile[1]>pos[1]:
-        if world[f"{x},{y}"][0].getBottom(world[f"{x},{y}"][2])==EDGES.road:
-            if world.get(f"{x},{y+1}"):
+        if world[(x,y)].tile.getBottom(world[(x,y)].rotation)==EDGES.road:
+            if world.get((x,y+1)):
                 road=calculateRoadConnections((x,y+1),pos,road)
     if not fromTile[0]<pos[0]:
-        if world[f"{x},{y}"][0].getLeft(world[f"{x},{y}"][2])==EDGES.road:
-            if world.get(f"{x-1},{y}"):
+        if world[(x,y)].tile.getLeft(world[(x,y)].rotation)==EDGES.road:
+            if world.get((x-1,y)):
                 road=calculateRoadConnections((x-1,y),pos,road)
     if not fromTile[0]>pos[0]:
-        if world[f"{x},{y}"][0].getRight(world[f"{x},{y}"][2])==EDGES.road:
-            if world.get(f"{x+1},{y}"):
+        if world[(x,y)].tile.getRight(world[(x,y)].rotation)==EDGES.road:
+            if world.get((x+1,y)):
                 road=calculateRoadConnections((x+1,y),pos,road)
     
     return road
@@ -162,6 +162,41 @@ except FileNotFoundError:
         handleExit()
 
 
+class Block:
+    def __init__(self,tile:Tile,offsetSeed:int,rotation:int) -> None:
+        self.tile=tile
+        self.offsetSeed=offsetSeed
+        self.rotation=rotation
+
+
+class World:
+    def __init__(self) -> None:
+        self._world={(0,0):Block(selectTile(riversStraight),random.randint(0,100),0)}
+    
+    def __getitem__(self, pos:tuple[int,int]):
+        return self._world[pos]
+
+    def __setitem__(self, key, value):
+        self._world[key] = value
+
+    def __delitem__(self, key):
+        del self._world[key]
+
+    def __iter__(self):
+        return iter(self._world)
+
+    def __len__(self):
+        return len(self._world)
+    
+    def items(self):
+        return self._world.items()
+    
+    def get(self,pos:tuple[int,int]):
+        return self._world.get(pos)
+
+
+
+
 cursor:Tile=selectTiles(river=True)
 cursorRotation=0
 placedRiverEnds=0
@@ -180,7 +215,7 @@ lastKeysPressed=[]
 clock = pygame.time.Clock()
 
 
-world = {"0,0":[selectTile(riversStraight),random.randint(0,100),0]}
+world = World()
 
 
 
@@ -213,50 +248,50 @@ while True:
 
     
     for pos, info in world.items():
-        info[0].render(int(pos.split(",")[0]),int(pos.split(",")[1]),info[2],info[1])
+        info.tile.render(int(pos[0]),int(pos[1]),info.offsetSeed,info.rotation)
 
     cx=int((pygame.mouse.get_pos()[0]+35-window.get_width()/2)//70)
     cy=int((pygame.mouse.get_pos()[1]+35-window.get_height()/2)//70)
     if pygame.mouse.get_pressed()[0]:
         if not f"{cx},{cy}" in world:
-            infoLeft=world.get(f"{cx-1},{cy}")
-            infoRight=world.get(f"{cx+1},{cy}")
-            infoTop=world.get(f"{cx},{cy-1}")
-            infoBottom=world.get(f"{cx},{cy+1}")
+            infoLeft=world.get((cx-1,cy))
+            infoRight=world.get((cx+1,cy))
+            infoTop=world.get((cx,cy-1))
+            infoBottom=world.get((cx,cy+1))
 
             allow=True
             if infoLeft==None and infoRight==None and infoTop==None and infoBottom==None:allow=False
 
-            if infoLeft:blockLeft:Tile=infoLeft[0]
-            if infoRight:blockRight:Tile=infoRight[0]
-            if infoTop:blockTop:Tile=infoTop[0]
-            if infoBottom:blockBottom:Tile=infoBottom[0]
+            if infoLeft:blockLeft:Tile=infoLeft.tile
+            if infoRight:blockRight:Tile=infoRight.tile
+            if infoTop:blockTop:Tile=infoTop.tile
+            if infoBottom:blockBottom:Tile=infoBottom.tile
 
             if allow:
                 if infoLeft:
-                    if blockLeft.getRight(infoLeft[2])!=cursor.getLeft(cursorRotation):allow=False
+                    if blockLeft.getRight(infoLeft.rotation)!=cursor.getLeft(cursorRotation):allow=False
                 if infoTop:
-                    if blockTop.getBottom(infoTop[2])!=cursor.getTop(cursorRotation):allow=False
+                    if blockTop.getBottom(infoTop.rotation)!=cursor.getTop(cursorRotation):allow=False
                 if infoRight:
-                    if blockRight.getLeft(infoRight[2])!=cursor.getRight(cursorRotation):allow=False
+                    if blockRight.getLeft(infoRight.rotation)!=cursor.getRight(cursorRotation):allow=False
                 if infoBottom:
-                    if blockBottom.getTop(infoBottom[2])!=cursor.getBottom(cursorRotation):allow=False
+                    if blockBottom.getTop(infoBottom.rotation)!=cursor.getBottom(cursorRotation):allow=False
 
             if allow:
                 if EDGES.river in cursor.rotations:
                     riverfound=False
                     if infoLeft:
-                        if blockLeft.getRight(infoLeft[2])==EDGES.river:riverfound=True
+                        if blockLeft.getRight(infoLeft.rotation)==EDGES.river:riverfound=True
                     if infoTop:
-                        if blockTop.getBottom(infoTop[2])==EDGES.river:riverfound=True
+                        if blockTop.getBottom(infoTop.rotation)==EDGES.river:riverfound=True
                     if infoRight:
-                        if blockRight.getLeft(infoRight[2])==EDGES.river:riverfound=True
+                        if blockRight.getLeft(infoRight.rotation)==EDGES.river:riverfound=True
                     if infoBottom:
-                        if blockBottom.getTop(infoBottom[2])==EDGES.river:riverfound=True
+                        if blockBottom.getTop(infoBottom.rotation)==EDGES.river:riverfound=True
                     if not riverfound:allow=False
 
             if allow:
-                world[f"{cx},{cy}"]=[cursor,random.randint(0,100),cursorRotation]
+                world[(cx,cy)]=Block(cursor,random.randint(0,100),cursorRotation)
                 print(calculateRoadConnections((cx,cy),road=[]))
                 if cursor in riversEnd:
                     placedRiverEnds+=1
