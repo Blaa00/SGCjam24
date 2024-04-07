@@ -3,21 +3,16 @@ from enum import Enum, auto
 import math
 import random
 import pygame
+from util import *
+
+from menu import inMenu
 
 pygame.display.init()
-window=pygame.display.set_mode((16*70,9*70))
+window=pygame.display.set_mode((16*70,9*70),pygame.RESIZABLE)
+pygame.display.set_caption("Stadspel")
 
 pygame.font.init()
 
-def renderText(fontName, fontSize, text, color):
-    font=pygame.font.SysFont(fontName, fontSize)
-    return font.render(text,False,color)
-
-def handleExit():
-    for event in EVENTS:
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
 
 
 
@@ -197,6 +192,14 @@ def giveRoadScore(road):
     if endsFound==2:
         for i in mostPlayers:
             playerScores[i]+=len(road)
+            for tile in road:
+        
+                pos=tile[0]#pos, not direction
+                if world[pos].player:
+                    if ["u","r","d","l"][world[pos].player[1]] in tile:
+                        playerMarkers[world[pos].player[0]]+=1
+                        world[pos].player=None
+
 
 
 def checkAirportScores(pos,_=False):
@@ -211,12 +214,15 @@ def checkAirportScores(pos,_=False):
             if (x3,y3)!=pos:
                 if world.get((x3,y3)):
                     score+=1
-                    if world[(x3,y3)].tile in airports:
-                        checkAirportScores((x3,y3),True)
+                    if not _:
+                        if world[(x3,y3)].tile in airports:
+                            checkAirportScores((x3,y3),True)
     if world[pos].tile in airports:
         if world[pos].player:
             if score == 9:
                 playerScores[world[pos].player[0]]+=9
+                playerMarkers[world[pos].player[0]]+=1
+                world[pos].player=None
 
 
 
@@ -226,7 +232,7 @@ try:
     grass = Tile("grass.png")
     riversStraight = [Tile("riverLR.png",EDGES.river,EDGES.river),Tile("riverLR1.png",EDGES.river,EDGES.river),Tile("riverLR2.png",EDGES.river,EDGES.river),Tile("riverLR3.png",EDGES.river,EDGES.river),Tile("riverLRRoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road),Tile("riverLR2RoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road),Tile("riverLR3RoadTB.png",left=EDGES.river,right=EDGES.river,top=EDGES.road,bottom=EDGES.road)]
     riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river),Tile("riverLBRoadTR.png",left=EDGES.river,bottom=EDGES.river,top=EDGES.road,right=EDGES.road)]
-    riversEnd = [Tile("riverL.png",left=EDGES.river)]*5
+    riversEnd = [Tile("riverL.png",left=EDGES.river)]*2
 
     roadsStraight = [Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
     roadsCrossings = [Tile("roadTRLB.png",EDGES.road,EDGES.road,EDGES.road,EDGES.road)]
@@ -237,6 +243,8 @@ try:
 
     riverTiles=[riversStraight,riversTurn,riversEnd]
     defaultTiles=[roadsStraight,roadsCrossings,roadsEnd,roadsTurn,airports]
+
+    pygame.display.set_icon(pygame.image.load("assets/bagott.png"))
 except FileNotFoundError:
     txtsurf=renderText("Roboto",30,"Failed loading textures.","#ffffff")
     window=pygame.display.set_mode((txtsurf.get_width(),txtsurf.get_height()))
@@ -246,6 +254,22 @@ except FileNotFoundError:
     while True:
         EVENTS = pygame.event.get()
         handleExit()
+
+
+
+
+
+
+
+players=inMenu(window)
+lmbPressed=True
+
+
+
+
+
+
+
 
 
 class Block:
@@ -289,13 +313,15 @@ cursorRotation=0
 placedRiverEnds=0
 
 
-players=3
 playerColors=["red","green","blue","black","yellow"]
 currentTurn=0
 playerScores=[]
+playerMarkers=[]
 for i in range(players):
     playerScores.append(0)
+    playerMarkers.append(8)
 playerIsPlacingMarker=False
+skipButtonRect=pygame.Rect(0,0,0,0)
 
 
 
@@ -316,8 +342,7 @@ while True:
     dt = clock.tick(60)
 
 
-    EVENTS = pygame.event.get()
-    handleExit()
+    EVENTS=handleExit()
 
     keys=pygame.key.get_pressed()
     if keys[pygame.K_r]:
@@ -335,7 +360,7 @@ while True:
 
 
 
-    window.fill("#000000")
+    window.fill("#888888")
 
     
     for pos, info in world.items():
@@ -402,37 +427,44 @@ while True:
         if not lmbPressed:
             lmbPressed=True
             if playerIsPlacingMarker:
-                if world[playerIsPlacingMarker].tile in airports:
+                if skipButtonRect.collidepoint(mouseX,mouseY):
                     currentTurn+=1
-                    world[playerIsPlacingMarker].player=[(currentTurn-1)%players,-1]#playernr, middle
-                    checkAirportScores(playerIsPlacingMarker)
                     playerIsPlacingMarker=False
                 else:
-                    playerplacedmarkerpos=playerIsPlacingMarker
-                    currentTurn+=1
-                    if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]:
-                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,0]#playernr, top
-                        playerIsPlacingMarker=False
-                    elif diffX>diffY and -diffX>diffY and world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]:
-                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,2]#playernr, bottom
-                        playerIsPlacingMarker=False
-                    elif diffX>diffY and diffX>-diffY and world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]:
-                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,3]#playernr, left
-                        playerIsPlacingMarker=False
-                    elif diffX<diffY and diffX<-diffY and world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]:
-                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,1]#playernr, right
+                    if world[playerIsPlacingMarker].tile in airports:
+                        playerMarkers[(currentTurn)%players]-=1
+                        world[playerIsPlacingMarker].player=[(currentTurn)%players,-1]#playernr, middle
+                        currentTurn+=1
+                        checkAirportScores(playerIsPlacingMarker)
                         playerIsPlacingMarker=False
                     else:
-                        currentTurn-=1
+                        playerplacedmarkerpos=playerIsPlacingMarker
+                        playerMarkers[(currentTurn)%players]-=1
+                        currentTurn+=1
+                        if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]:
+                            world[playerIsPlacingMarker].player=[(currentTurn-1)%players,0]#playernr, top
+                            playerIsPlacingMarker=False
+                        elif diffX>diffY and -diffX>diffY and world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]:
+                            world[playerIsPlacingMarker].player=[(currentTurn-1)%players,2]#playernr, bottom
+                            playerIsPlacingMarker=False
+                        elif diffX>diffY and diffX>-diffY and world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]:
+                            world[playerIsPlacingMarker].player=[(currentTurn-1)%players,3]#playernr, left
+                            playerIsPlacingMarker=False
+                        elif diffX<diffY and diffX<-diffY and world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]:
+                            world[playerIsPlacingMarker].player=[(currentTurn-1)%players,1]#playernr, right
+                            playerIsPlacingMarker=False
+                        else:
+                            currentTurn-=1
+                            playerMarkers[(currentTurn)%players]+=1
 
 
-                    #calculate score
-                    roadConnections=calculateRoadConnections(playerplacedmarkerpos)
-                    if type(roadConnections[0][0])==list:#intersection
-                        for road in roadConnections:
-                            giveRoadScore(road)
-                    else:
-                        giveRoadScore(roadConnections)
+                        #calculate score
+                        roadConnections=calculateRoadConnections(playerplacedmarkerpos)
+                        if type(roadConnections[0][0])==list:#intersection
+                            for road in roadConnections:
+                                giveRoadScore(road)
+                        else:
+                            giveRoadScore(roadConnections)
 
             else:
                 if not (cx,cy) in world:
@@ -484,6 +516,9 @@ while True:
                         
 
                         def allowPlaceMarker():
+                            if playerMarkers[currentTurn%players]<=0:
+                                return False
+                            
                             if world[(cx,cy)].tile in airports:
                                 return True
                             else:
@@ -516,13 +551,24 @@ while True:
                 
             
     
-    if not playerIsPlacingMarker:
+    if playerIsPlacingMarker:
+        txtsurf=renderText("Roboto",40,"Skip","white")
+        skipButtonRect=txtsurf.get_rect()
+        skipButtonRect=skipButtonRect.move(window.get_width()-skipButtonRect.w-15,window.get_height()-95)
+        skipButtonRect=skipButtonRect.inflate(20,0)
+    else:
         cursor.render(cx,cy,cursorRotation,0,True)
 
 
 
     pygame.draw.rect(window,playerColors[currentTurn%players],(0,window.get_height()-100,window.get_width(),100))
+    for i in range(playerMarkers[currentTurn%players]):
+        pygame.draw.circle(window,"white",(i*47+27,window.get_height()-100+27),20,2)
 
+    if playerIsPlacingMarker:
+        pygame.draw.rect(window,["black","#555555"][skipButtonRect.collidepoint(mouseX,mouseY)],skipButtonRect,border_radius=5)
+        pygame.draw.rect(window,"white",skipButtonRect,2,border_radius=5)
+        window.blit(txtsurf,skipButtonRect.move(10,0))
 
     txtsurf=renderText("Roboto",30,f"FPS: {round(clock.get_fps())}", "#ff0000")
     window.blit(txtsurf,(window.get_width()-txtsurf.get_width()-5,5))
