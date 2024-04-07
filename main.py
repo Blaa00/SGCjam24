@@ -361,7 +361,8 @@ except FileNotFoundError:
 
 
 
-pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(.4)
+pygame.mixer.music.play(-1,0,1000)
 
 
 players=inMenu(window)

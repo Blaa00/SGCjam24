@@ -2,7 +2,11 @@ import pygame
 from util import *
 
 def inMenu(window:pygame.Surface):
+    clock = pygame.time.Clock()
+
     while True:
+        dt=clock.tick(60)
+        
         handleExit()
 
         window.fill("black")
