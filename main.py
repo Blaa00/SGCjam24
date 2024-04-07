@@ -199,6 +199,26 @@ def giveRoadScore(road):
             playerScores[i]+=len(road)
 
 
+def checkAirportScores(pos,_=False):
+    x,y=pos
+    x-=1
+    y-=1
+    score=1
+    for x2 in range(3):
+        x3=x+x2
+        for y2 in range(3):
+            y3=y+y2
+            if (x3,y3)!=pos:
+                if world.get((x3,y3)):
+                    score+=1
+                    if world[(x3,y3)].tile in airports:
+                        checkAirportScores((x3,y3),True)
+    if world[pos].tile in airports:
+        if world[pos].player:
+            if score == 9:
+                playerScores[world[pos].player[0]]+=9
+
+
 
 try:
     tileShadowImg=pygame.image.load("assets/shadow.png").convert_alpha()
@@ -385,6 +405,7 @@ while True:
                 if world[playerIsPlacingMarker].tile in airports:
                     currentTurn+=1
                     world[playerIsPlacingMarker].player=[(currentTurn-1)%players,-1]#playernr, middle
+                    checkAirportScores(playerIsPlacingMarker)
                     playerIsPlacingMarker=False
                 else:
                     playerplacedmarkerpos=playerIsPlacingMarker
@@ -453,6 +474,7 @@ while True:
 
                     if allow:
                         world[(cx,cy)]=Block(cursor,random.randint(0,100),cursorRotation)
+                        checkAirportScores((cx,cy))
                         if cursor in riversEnd:
                             placedRiverEnds+=1
                         if placedRiverEnds>=2:
@@ -460,7 +482,6 @@ while True:
                         else:
                             cursor=selectTiles(river=True)
                         
-                        print(calculateRoadConnections((cx,cy),road=[]))
 
                         def allowPlaceMarker():
                             if world[(cx,cy)].tile in airports:
