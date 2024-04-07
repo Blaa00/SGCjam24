@@ -296,9 +296,8 @@ def giveCityScores(input):
             
                     pos=tile
                     if world[pos].player:
-                        if ["u","r","d","l"][world[pos].player[1]] in tile:
-                            playerMarkers[world[pos].player[0]]+=1
-                            world[pos].player=None
+                        playerMarkers[world[pos].player[0]]+=1
+                        world[pos].player=None
 
 
 
@@ -334,10 +333,10 @@ try:
     riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river),Tile("riverLBRoadTR.png",left=EDGES.river,bottom=EDGES.river,top=EDGES.road,right=EDGES.road)]
     riversEnd = [Tile("riverL.png",left=EDGES.river)]*20
 
-    roadsStraight = []#Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
+    roadsStraight = [Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
     roadsCrossings = [Tile("roadTRLB.png",EDGES.road,EDGES.road,EDGES.road,EDGES.road),Tile("roadLRB.png",right=EDGES.road,left=EDGES.road,bottom=EDGES.road)]
-    roadsTurn = []#Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
-    roadsEnd = []#Tile("roadL.png",left=EDGES.road),Tile("roadL1.png",left=EDGES.road)]
+    roadsTurn = [Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
+    roadsEnd = [Tile("roadL.png",left=EDGES.road),Tile("roadL1.png",left=EDGES.road)]
 
     airports = [Tile("airport.png")]
 
@@ -423,7 +422,7 @@ playerScores=[]
 playerMarkers=[]
 for i in range(players):
     playerScores.append(0)
-    playerMarkers.append(8)
+    playerMarkers.append(7)
 playerIsPlacingMarker=False
 skipButtonRect=pygame.Rect(0,0,0,0)
 
