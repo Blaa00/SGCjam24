@@ -4,15 +4,15 @@ import math
 import random
 import pygame
 from util import *
-import sys
-
-#sys.setrecursionlimit(30)
 
 from menu import inMenu
 
 pygame.display.init()
 window=pygame.display.set_mode((16*70,9*70),pygame.RESIZABLE)
 pygame.display.set_caption("Västerås")
+
+
+
 
 pygame.font.init()
 
