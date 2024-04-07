@@ -13,7 +13,7 @@ pygame.display.set_caption("Stadspel")
 
 pygame.font.init()
 
-
+pygame.mixer.init()
 
 
 class EDGES(Enum):
@@ -247,6 +247,8 @@ try:
     riverTiles=[riversStraight,riversTurn,riversEnd]
     defaultTiles=[roadsStraight,roadsCrossings,roadsEnd,roadsTurn,airports]
 
+    soundtrack = pygame.mixer.music.load("assets/Soundtrack.wav")
+
     pygame.display.set_icon(pygame.image.load("assets/bagott.png"))
 except FileNotFoundError:
     txtsurf=renderText("Roboto",30,"Failed loading textures.","#ffffff")
@@ -261,7 +263,7 @@ except FileNotFoundError:
 
 
 
-
+pygame.mixer.music.play(-1)
 
 
 players=inMenu(window)
