@@ -4,6 +4,9 @@ import math
 import random
 import pygame
 from util import *
+import sys
+
+sys.setrecursionlimit(30)
 
 from menu import inMenu
 
@@ -80,36 +83,66 @@ def selectTiles(river=False):
     return random.choice(array)
 
 
+
+def roadConnectionsInTile(pos):
+    roadConnections=0
+    for i in world[pos].tile.rotations:
+        if i==EDGES.road:
+            roadConnections+=1
+    return roadConnections
+
 def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,road:list[tuple[int,int]]=None):
     x,y=pos
     if fromTile==None:fromTile=pos
     if road==None:road=[]
 
 
-    roadConnections=0
-    for i in world[(x,y)].tile.rotations:
-        if i==EDGES.road:
-            roadConnections+=1
-
+    
+    roadConnections=roadConnectionsInTile((x,y))
 
 
     if road==[]:
         if roadConnections>2:
+
             if world[(x,y)].tile.getTop(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x,y-1)):
-                    road.append(calculateRoadConnections((x,y-1)))
+                    if roadConnectionsInTile((x,y-1))>2:
+                        a=[]
+                        a.append([(x,y),"u"])
+                        a.append([(x,y-1),"d"])
+                        road.append(a)
+                    else:
+                        road.append(calculateRoadConnections((x,y-1)))
 
             if world[(x,y)].tile.getBottom(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x,y+1)):
-                    road.append(calculateRoadConnections((x,y+1)))
+                    if roadConnectionsInTile((x,y+1))>2:
+                        a=[]
+                        a.append([(x,y),"d"])
+                        a.append([(x,y+1),"u"])
+                        road.append(a)
+                    else:
+                        road.append(calculateRoadConnections((x,y+1)))
 
             if world[(x,y)].tile.getLeft(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x-1,y)):
-                    road.append(calculateRoadConnections((x-1,y)))
+                    if roadConnectionsInTile((x-1,y))>2:
+                        a=[]
+                        a.append([(x,y),"l"])
+                        a.append([(x-1,y),"r"])
+                        road.append(a)
+                    else:
+                        road.append(calculateRoadConnections((x-1,y)))
 
             if world[(x,y)].tile.getRight(world[(x,y)].rotation)==EDGES.road:
                 if world.get((x+1,y)):
-                    road.append(calculateRoadConnections((x+1,y)))
+                    if roadConnectionsInTile((x+1,y))>2:
+                        a=[]
+                        a.append([(x,y),"r"])
+                        a.append([(x+1,y),"l"])
+                        road.append(a)
+                    else:
+                        road.append(calculateRoadConnections((x+1,y)))
 
             return road
     
@@ -129,6 +162,7 @@ def calculateRoadConnections(pos:tuple[int,int],fromTile:tuple[int,int]=None,roa
     
     if roadConnections!=2:
         if len(road)>1:return road
+    
     
     if not fromTile[1]<pos[1]:
         if world[(x,y)].tile.getTop(world[(x,y)].rotation)==EDGES.road:
@@ -300,10 +334,10 @@ try:
     riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river),Tile("riverLBRoadTR.png",left=EDGES.river,bottom=EDGES.river,top=EDGES.road,right=EDGES.road)]
     riversEnd = [Tile("riverL.png",left=EDGES.river)]*20
 
-    roadsStraight = [Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
+    roadsStraight = []#Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
     roadsCrossings = [Tile("roadTRLB.png",EDGES.road,EDGES.road,EDGES.road,EDGES.road),Tile("roadLRB.png",right=EDGES.road,left=EDGES.road,bottom=EDGES.road)]
-    roadsTurn = [Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
-    roadsEnd = [Tile("roadL.png",left=EDGES.road),Tile("roadL1.png",left=EDGES.road)]
+    roadsTurn = []#Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
+    roadsEnd = []#Tile("roadL.png",left=EDGES.road),Tile("roadL1.png",left=EDGES.road)]
 
     airports = [Tile("airport.png")]
 
@@ -471,17 +505,18 @@ while True:
 
             roadConnections=calculateRoadConnections(playerIsPlacingMarker)
             placeableDirections={"r":True,"d":True,"l":True,"u":True}
-            if type(roadConnections[0][0])==list:
-                #intersection
-                for i in roadConnections:
-                    for j in i:
-                        if j[0]==playerIsPlacingMarker:
-                            placeableDirections[j[1]]=True
-                            for k in i:
-                                if world[k[0]].player:
-                                    placeableDirections[j[1]]=False
-                                    
-                            break
+            if len(roadConnections)>0:
+                if type(roadConnections[0][0])==list:
+                    #intersection
+                    for i in roadConnections:
+                        for j in i:
+                            if j[0]==playerIsPlacingMarker:
+                                placeableDirections[j[1]]=True
+                                for k in i:
+                                    if world[k[0]].player:
+                                        placeableDirections[j[1]]=False
+                                        
+                                break
             
 
             if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road,EDGES.city] and placeableDirections["u"]: #up
