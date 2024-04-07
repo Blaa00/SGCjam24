@@ -70,7 +70,7 @@ def selectTile(tiles:list|Tile):
     else:
         return tiles
 
-def selectTiles(river=False):
+def selectTiles(tempWorld, river=False):
     array=[]
     selectableTiles=defaultTiles
     if river:
@@ -80,7 +80,16 @@ def selectTiles(river=False):
             array+=i
         else:
             array.append(i)
-    return random.choice(array)
+    
+    foundEdge = False
+    while not foundEdge:
+        tile = random.choice(array)
+        for _, worldTiles in tempWorld.items():
+            for rotation in tile.rotations:
+                if rotation in worldTiles.tile.rotations:
+                    foundEdge = True
+
+    return tile
 
 
 
@@ -414,9 +423,9 @@ class World:
         return self._world.get(pos)
 
 
+world = World()
 
-
-cursor:Tile=selectTiles(river=True)
+cursor:Tile=selectTiles(world, river=True)
 cursorRotation=0
 placedRiverEnds=0
 
@@ -439,8 +448,6 @@ lastKeysPressed=[]
 
 clock = pygame.time.Clock()
 
-
-world = World()
 
 
 
@@ -639,9 +646,9 @@ while True:
                         if cursor in riversEnd:
                             placedRiverEnds+=1
                         if placedRiverEnds>=2:
-                            cursor=selectTiles()
+                            cursor=selectTiles(world)
                         else:
-                            cursor=selectTiles(river=True)
+                            cursor=selectTiles(world, river=True)
                         
 
                         def allowPlaceMarker():
