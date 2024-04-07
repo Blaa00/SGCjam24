@@ -46,15 +46,18 @@ class Tile:
         if holding:
             img=pygame.transform.rotate(pygame.transform.scale(self.img,(80,80)),-rotation*90)
             img.set_alpha(180)
-            pos=((x*70)+((window.get_width()-80)/2),((y*70)+((window.get_height()-80)/2)))
+            pos=((x*68)+((window.get_width()-80)/2),((y*68)+((window.get_height()-80)/2)))
             window.blit(img,pos)
             window.blit(pygame.transform.scale(tileShadowImg,(80,80)),pos)
             return
-        #random.seed(offsetSeed)
         
-        pos=((x*70)+((window.get_width()-64)/2)+random.randint(-0,0),((y*70)+((window.get_height()-64)/2))+random.randint(-0,0))
+        state=random.getstate()
+        random.seed(offsetSeed)
+        
+        pos=((x*68)+((window.get_width()-64)/2)+random.randint(-2,2),((y*68)+((window.get_height()-64)/2))+random.randint(-2,2))
         window.blit(pygame.transform.rotate(self.img,-rotation*90),pos)
         window.blit(tileShadowImg,pos)
+        random.setstate(state)
 
 
 def selectTile(tiles:list|Tile):
@@ -282,8 +285,10 @@ class Block:
 
 class World:
     def __init__(self) -> None:
+        state=random.getstate()
         self._world={(0,0):Block(selectTile(riversStraight),random.randint(0,100),0)}
-    
+        random.setstate(state)
+
     def __getitem__(self, pos:tuple[int,int]):
         return self._world[pos]
 
@@ -365,7 +370,7 @@ while True:
     
     for pos, info in world.items():
         x,y=pos
-        pos2=((x*70)+((window.get_width()-64)/2)+random.randint(-0,0),((y*70)+((window.get_height()-64)/2))+random.randint(-0,0))
+        pos2=((x*68)+((window.get_width()-64)/2),((y*68)+((window.get_height()-64)/2)))
         info.tile.render(int(pos[0]),int(pos[1]),info.rotation,info.offsetSeed)
         if info.player:
             if info.player[1]==-1:
@@ -389,7 +394,7 @@ while True:
 
     if playerIsPlacingMarker:
         x,y=playerIsPlacingMarker[0],playerIsPlacingMarker[1]
-        pos=((x*70)+((window.get_width()-64)/2)+random.randint(-0,0),((y*70)+((window.get_height()-64)/2))+random.randint(-0,0))
+        pos=((x*68)+((window.get_width()-64)/2),((y*68)+((window.get_height()-64)/2)))
         if world[playerIsPlacingMarker].tile in airports:
             #airport
             pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+32),10)
