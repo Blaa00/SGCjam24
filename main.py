@@ -716,4 +716,6 @@ while True:
         txtsurf=renderText("Roboto",25,f"{score} Poäng", playerColors[player])
         window.blit(txtsurf,(5,y))
         y+=txtsurf.get_height()
+    turntext = renderText("Roboto", 25, f"Omgång {currentTurn//players+1}", "#ffffff")
+    window.blit(turntext, (5,window.get_height()-94))
     pygame.display.flip()
