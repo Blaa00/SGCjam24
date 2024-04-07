@@ -6,7 +6,7 @@ import pygame
 from util import *
 import sys
 
-sys.setrecursionlimit(30)
+#sys.setrecursionlimit(30)
 
 from menu import inMenu
 
