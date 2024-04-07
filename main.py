@@ -12,7 +12,7 @@ from menu import inMenu
 
 pygame.display.init()
 window=pygame.display.set_mode((16*70,9*70),pygame.RESIZABLE)
-pygame.display.set_caption("Stadspel")
+pygame.display.set_caption("Västerås")
 
 pygame.font.init()
 
