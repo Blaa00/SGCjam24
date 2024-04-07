@@ -213,8 +213,10 @@ try:
     roadsTurn = [Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
     roadsEnd = [Tile("roadL.png",left=EDGES.road),Tile("roadL1.png",left=EDGES.road)]
 
+    airports = [Tile("airport.png")]
+
     riverTiles=[riversStraight,riversTurn,riversEnd]
-    defaultTiles=[roadsStraight,roadsCrossings,roadsEnd,roadsTurn]
+    defaultTiles=[roadsStraight,roadsCrossings,roadsEnd,roadsTurn,airports]
 except FileNotFoundError:
     txtsurf=renderText("Roboto",30,"Failed loading textures.","#ffffff")
     window=pygame.display.set_mode((txtsurf.get_width(),txtsurf.get_height()))
@@ -321,7 +323,9 @@ while True:
         pos2=((x*70)+((window.get_width()-64)/2)+random.randint(-0,0),((y*70)+((window.get_height()-64)/2))+random.randint(-0,0))
         info.tile.render(int(pos[0]),int(pos[1]),info.rotation,info.offsetSeed)
         if info.player:
-            if info.player[1]==0:
+            if info.player[1]==-1:
+                pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+32),10)
+            elif info.player[1]==0:
                 pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]),10)
             elif info.player[1]==2:
                 pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+64),10)
@@ -341,62 +345,73 @@ while True:
     if playerIsPlacingMarker:
         x,y=playerIsPlacingMarker[0],playerIsPlacingMarker[1]
         pos=((x*70)+((window.get_width()-64)/2)+random.randint(-0,0),((y*70)+((window.get_height()-64)/2))+random.randint(-0,0))
-        diffX=pos[0]+32-mouseX
-        diffY=pos[1]+32-mouseY
+        if world[playerIsPlacingMarker].tile in airports:
+            #airport
+            pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+32),10)
 
-        roadConnections=calculateRoadConnections(playerIsPlacingMarker)
-        placeableDirections={"r":True,"d":True,"l":True,"u":True}
-        if type(roadConnections[0][0])==list:
-            #intersection
-            for i in roadConnections:
-                for j in i:
-                    if j[0]==playerIsPlacingMarker:
-                        placeableDirections[j[1]]=True
-                        for k in i:
-                            if world[k[0]].player:
-                                placeableDirections[j[1]]=False
-                                
-                        break
-        
+        else:
+            #road
+            diffX=pos[0]+32-mouseX
+            diffY=pos[1]+32-mouseY
 
-        if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]: #up
-            pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]),10)
-        elif diffX>diffY and -diffX>diffY and world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]: #down
-            pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+64),10)
-        elif diffX>diffY and diffX>-diffY and world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]: #left
-            pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0],pos[1]+32),10)
-        elif diffX<diffY and diffX<-diffY and world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]: #right
-            pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+64,pos[1]+32),10)
+            roadConnections=calculateRoadConnections(playerIsPlacingMarker)
+            placeableDirections={"r":True,"d":True,"l":True,"u":True}
+            if type(roadConnections[0][0])==list:
+                #intersection
+                for i in roadConnections:
+                    for j in i:
+                        if j[0]==playerIsPlacingMarker:
+                            placeableDirections[j[1]]=True
+                            for k in i:
+                                if world[k[0]].player:
+                                    placeableDirections[j[1]]=False
+                                    
+                            break
+            
+
+            if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]: #up
+                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]),10)
+            elif diffX>diffY and -diffX>diffY and world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]: #down
+                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+64),10)
+            elif diffX>diffY and diffX>-diffY and world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]: #left
+                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0],pos[1]+32),10)
+            elif diffX<diffY and diffX<-diffY and world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]: #right
+                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+64,pos[1]+32),10)
         
     if pygame.mouse.get_pressed()[0]:
         if not lmbPressed:
             lmbPressed=True
             if playerIsPlacingMarker:
-                playerplacedmarkerpos=playerIsPlacingMarker
-                currentTurn+=1
-                if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]:
-                    world[playerIsPlacingMarker].player=[(currentTurn-1)%players,0]#playernr, top
-                    playerIsPlacingMarker=False
-                elif diffX>diffY and -diffX>diffY and world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]:
-                    world[playerIsPlacingMarker].player=[(currentTurn-1)%players,2]#playernr, bottom
-                    playerIsPlacingMarker=False
-                elif diffX>diffY and diffX>-diffY and world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]:
-                    world[playerIsPlacingMarker].player=[(currentTurn-1)%players,3]#playernr, left
-                    playerIsPlacingMarker=False
-                elif diffX<diffY and diffX<-diffY and world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]:
-                    world[playerIsPlacingMarker].player=[(currentTurn-1)%players,1]#playernr, right
+                if world[playerIsPlacingMarker].tile in airports:
+                    currentTurn+=1
+                    world[playerIsPlacingMarker].player=[(currentTurn-1)%players,-1]#playernr, middle
                     playerIsPlacingMarker=False
                 else:
-                    currentTurn-=1
+                    playerplacedmarkerpos=playerIsPlacingMarker
+                    currentTurn+=1
+                    if diffX<diffY and -diffX<diffY and world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]:
+                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,0]#playernr, top
+                        playerIsPlacingMarker=False
+                    elif diffX>diffY and -diffX>diffY and world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]:
+                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,2]#playernr, bottom
+                        playerIsPlacingMarker=False
+                    elif diffX>diffY and diffX>-diffY and world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]:
+                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,3]#playernr, left
+                        playerIsPlacingMarker=False
+                    elif diffX<diffY and diffX<-diffY and world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]:
+                        world[playerIsPlacingMarker].player=[(currentTurn-1)%players,1]#playernr, right
+                        playerIsPlacingMarker=False
+                    else:
+                        currentTurn-=1
 
 
-                #calculate score
-                roadConnections=calculateRoadConnections(playerplacedmarkerpos)
-                if type(roadConnections[0][0])==list:#intersection
-                    for road in roadConnections:
-                        giveRoadScore(road)
-                else:
-                    giveRoadScore(roadConnections)
+                    #calculate score
+                    roadConnections=calculateRoadConnections(playerplacedmarkerpos)
+                    if type(roadConnections[0][0])==list:#intersection
+                        for road in roadConnections:
+                            giveRoadScore(road)
+                    else:
+                        giveRoadScore(roadConnections)
 
             else:
                 if not (cx,cy) in world:
@@ -448,17 +463,20 @@ while True:
                         print(calculateRoadConnections((cx,cy),road=[]))
 
                         def allowPlaceMarker():
-                            if EDGES.road in world[(cx,cy)].tile.rotations:
-                                connections=calculateRoadConnections((cx,cy),road=[])
-                                if type(connections[0][0])==list:
-                                    pass
-                                else:
-                                    for pos in connections:
-                                        if world[pos[0]].player:
-                                            if ["u","r","d","l"][world[pos[0]].player[1]] in pos:
-                                                return False
+                            if world[(cx,cy)].tile in airports:
                                 return True
-                            return False
+                            else:
+                                if EDGES.road in world[(cx,cy)].tile.rotations:
+                                    connections=calculateRoadConnections((cx,cy),road=[])
+                                    if type(connections[0][0])==list:
+                                        pass
+                                    else:
+                                        for pos in connections:
+                                            if world[pos[0]].player:
+                                                if ["u","r","d","l"][world[pos[0]].player[1]] in pos:
+                                                    return False
+                                    return True
+                                return False
                         
                         if not allowPlaceMarker():
                             #calculate score
