@@ -508,7 +508,7 @@ while True:
 
 
     if playerIsPlacingMarker:
-        currentMarker = markers[currentTurn%players]
+        currentMarker = markers[currentTurn%players].copy()
         currentMarker.set_alpha(195)
         x,y=playerIsPlacingMarker[0],playerIsPlacingMarker[1]
         pos=((x*68)+((window.get_width()-64)/2),((y*68)+((window.get_height()-64)/2)))
