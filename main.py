@@ -12,7 +12,7 @@ from menu import inMenu
 
 pygame.display.init()
 window=pygame.display.set_mode((16*70,9*70),pygame.RESIZABLE)
-pygame.display.set_caption("Stadspel")
+pygame.display.set_caption("Västerås")
 
 pygame.font.init()
 
@@ -333,6 +333,8 @@ try:
     riversTurn = [Tile("riverLB.png",left=EDGES.river,bottom=EDGES.river),Tile("riverLBRoadTR.png",left=EDGES.river,bottom=EDGES.river,top=EDGES.road,right=EDGES.road)]
     riversEnd = [Tile("riverL.png",left=EDGES.river)]*20
 
+    markers = [pygame.image.load("assets/redMarker.png").convert_alpha(), pygame.image.load("assets/greenMarker.png").convert_alpha(), pygame.image.load("assets/blueMarker.png").convert_alpha(), pygame.image.load("assets/blackMarker.png").convert_alpha(), pygame.image.load("assets/yellowMarker.png").convert_alpha()]
+
     roadsStraight = [Tile("roadLR.png",left=EDGES.road,right=EDGES.road),Tile("roadLR1.png",left=EDGES.road,right=EDGES.road),Tile("roadLR2.png",left=EDGES.road,right=EDGES.road)]
     roadsCrossings = [Tile("roadTRLB.png",EDGES.road,EDGES.road,EDGES.road,EDGES.road),Tile("roadLRB.png",right=EDGES.road,left=EDGES.road,bottom=EDGES.road)]
     roadsTurn = [Tile("roadLB.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB1.png",left=EDGES.road,bottom=EDGES.road),Tile("roadLB2.png",left=EDGES.road,bottom=EDGES.road)]
@@ -475,15 +477,20 @@ while True:
         info.tile.render(int(pos[0]),int(pos[1]),info.rotation,info.offsetSeed)
         if info.player:
             if info.player[1]==-1:
-                pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+32),10)
+                window.blit(markers[info.player[0]], (pos2[0]+24,pos2[1]+24))
+                #pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+32),10)
             elif info.player[1]==0:
-                pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]),10)
+                window.blit(markers[info.player[0]], (pos2[0]+24,pos2[1]+0))
+                #pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+10),10)
             elif info.player[1]==2:
-                pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+64),10)
+                window.blit(markers[info.player[0]], (pos2[0]+24,pos2[1]+48))
+                #pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+32,pos2[1]+54),10)
             elif info.player[1]==3:
-                pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0],pos2[1]+32),10)
+                window.blit(markers[info.player[0]], (pos2[0]+0,pos2[1]+24))
+                #pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+10,pos2[1]+32),10)
             elif info.player[1]==1:
-                pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+64,pos2[1]+32),10)
+                window.blit(markers[info.player[0]], (pos2[0]+48,pos2[1]+24))
+                #pygame.draw.circle(window,playerColors[info.player[0]],(pos2[0]+54,pos2[1]+32),10)
 
 
     mouseX=pygame.mouse.get_pos()[0]
@@ -494,11 +501,14 @@ while True:
 
 
     if playerIsPlacingMarker:
+        currentMarker = markers[currentTurn%players]
+        currentMarker.set_alpha(195)
         x,y=playerIsPlacingMarker[0],playerIsPlacingMarker[1]
         pos=((x*68)+((window.get_width()-64)/2),((y*68)+((window.get_height()-64)/2)))
         if world[playerIsPlacingMarker].tile in airports:
             #airport
-            pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+32),10)
+            window.blit(currentMarker, (pos2[0]+24,pos2[1]+24))
+            #pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+32),10)
 
         else:
             #road
@@ -526,13 +536,17 @@ while True:
                                     placeableDirections[k]=False
 
             if diffX<diffY and -diffX<diffY and ((world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["u"]) or (world[playerIsPlacingMarker].tile.getTop(world[playerIsPlacingMarker].rotation) in [EDGES.city])): #up
-                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]),10)
+                window.blit(currentMarker, (pos2[0]+24,pos2[1]))
+                #pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]),10)
             elif diffX>diffY and -diffX>diffY and ((world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["d"]) or (world[playerIsPlacingMarker].tile.getBottom(world[playerIsPlacingMarker].rotation) in [EDGES.city])): #down
-                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+64),10)
+                window.blit(currentMarker, (pos2[0]+24,pos2[1]+48))
+                #pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+32,pos[1]+64),10)
             elif diffX>diffY and diffX>-diffY and ((world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["l"]) or (world[playerIsPlacingMarker].tile.getLeft(world[playerIsPlacingMarker].rotation) in [EDGES.city])): #left
-                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0],pos[1]+32),10)
+                window.blit(currentMarker, (pos2[0],pos2[1]+24))
+                #pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0],pos[1]+32),10)
             elif diffX<diffY and diffX<-diffY and ((world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.road] and placeableDirections["r"]) or (world[playerIsPlacingMarker].tile.getRight(world[playerIsPlacingMarker].rotation) in [EDGES.city])): #right
-                pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+64,pos[1]+32),10)
+                window.blit(currentMarker, (pos2[0]+48,pos2[1]+24))
+                #pygame.draw.circle(window,playerColors[currentTurn%players],(pos[0]+64,pos[1]+32),10)
         
     if pygame.mouse.get_pressed()[0]:
         if not lmbPressed:
@@ -678,16 +692,17 @@ while True:
     if playerIsPlacingMarker:
         txtsurf=renderText("Roboto",40,"Skip","white")
         skipButtonRect=txtsurf.get_rect()
-        skipButtonRect=skipButtonRect.move(window.get_width()-skipButtonRect.w-15,window.get_height()-95)
+        skipButtonRect=skipButtonRect.move(window.get_width()-skipButtonRect.w-15,window.get_height()-59)
         skipButtonRect=skipButtonRect.inflate(20,0)
     else:
         cursor.render(cx,cy,cursorRotation,0,True)
 
 
 
-    pygame.draw.rect(window,playerColors[currentTurn%players],(0,window.get_height()-100,window.get_width(),100))
+    pygame.draw.rect(window,playerColors[currentTurn%players],(0,window.get_height()-64,window.get_width(),64))
     for i in range(playerMarkers[currentTurn%players]):
-        pygame.draw.circle(window,"white",(i*47+27,window.get_height()-100+27),20,2)
+        #pygame.draw.circle(window,"white",(i*47+27,window.get_height()-100+27),20,2)
+        window.blit(pygame.transform.scale(markers[currentTurn%players], (48,48)), (i*47+27,window.get_height()-64+8))
 
     if playerIsPlacingMarker:
         pygame.draw.rect(window,["black","#555555"][skipButtonRect.collidepoint(mouseX,mouseY)],skipButtonRect,border_radius=5)
